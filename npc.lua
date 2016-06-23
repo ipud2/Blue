@@ -38,7 +38,6 @@ function npc:update( dt )
 		local x, y, vel = Ai:seekPos( self.x, self.y, Game.fsm.currentState.world.objs.link1.x, Game.fsm.currentState.world.objs.link1.y, self.velocity, self.maxSpeed, self.maxAccel );
 		self:setPos( x, y );
 		self.velocity = vel;
-	print( self.id .. " Updated!" );
 
 	else
 		self.velocity = 0;

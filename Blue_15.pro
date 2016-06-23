@@ -25,3 +25,34 @@ HEADERS += \
     SystemMan.h \
     Window.h \
     Ai.h
+
+DISTFILES += \
+    Ai.lua \
+    AnimatedSprite.lua \
+    Animation.lua \
+    Button.lua \
+    Camera.lua \
+    Circle.lua \
+    Clone.lua \
+    config.lua \
+    ControlMap.lua \
+    FSM.lua \
+    Game.lua \
+    GlobalState.lua \
+    Glyph.lua \
+    Link.lua \
+    MapManager.lua \
+    MenuState.lua \
+    Mouse.lua \
+    MovingObj.lua \
+    npc.lua \
+    Object.lua \
+    ObjMan.lua \
+    PauseState.lua \
+    Rectangle.lua \
+    RunState.lua \
+    Sprite.lua \
+    State.lua \
+    test2.lua \
+    Texture.lua \
+    World.lua

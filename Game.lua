@@ -37,9 +37,8 @@ function handleEvents( )
 	end
 end
 function update( dt )
-	if Keyboard:isKeyPressed( "R" ) then 
-		Game.fsm.currentState:onExit( ); 
-		init( ); 
+        if Keyboard:isKeyPressed( "Space" ) then
+                print( "Space Bar has been pressed!!" );
 	end
 	Game.fsm:update( );
 	-- if Mouse:isButtonClicked( Mouse["Right"] ) then print( "Right Button Clicked!!!!!" ); end	
