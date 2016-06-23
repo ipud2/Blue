@@ -20,4 +20,9 @@ function Mouse:isButtonClicked( button )
 	return mouse_isButtonClicked( button ); 
 end
 
+function Mouse:getPos( )
+	local x, y = mouse_getPos();
+	return { x = x; y = y };
+end
+
 return Mouse;

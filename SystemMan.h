@@ -10,9 +10,11 @@
 #include <map>
 #include <SFML/System.hpp>
 #include <SFML/Graphics.hpp>
+
 extern "C" {
 #include "lua.hpp"
 }
+#include "Window.h"
 
 /*
  * The SystemMan is responsible for alowwing lua to access what is happening on the machine it is running on
@@ -78,6 +80,7 @@ namespace SystemMan
     {
         static int luaIsKeyPressed( lua_State* luaState );
         static int luaIsMouseClicked( lua_State* luaState );
+        static int luaGetMousePosition( lua_State* luaState );
         static int luaRegister( lua_State* luaState );
     }
     static int luaRegister( lua_State* luaState );

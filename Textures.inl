@@ -1,4 +1,16 @@
 #include "GraphicsMan.h"
+
+
+std::string GraphicsMan::Textures::loadFromFile( std::string assetId, std::string fileName )
+{
+    if( textures.find( assetId ) == textures.end( ) ) {
+        textures.insert( std::pair<std::string, sf::Texture*>( assetId, new sf::Texture( ) ) );
+        textures.at( assetId )->loadFromFile( fileName );
+        return assetId;
+    }
+    return "TEXTURE LOADING FAILURE";
+}
+
 /// \brief luaLoadFromFile
 /// \param luaState
 /// STACK
@@ -7,11 +19,8 @@
 int GraphicsMan::Textures::luaLoadFromFile( lua_State* luaState ) {
     if( !lua_isstring( luaState, 1 ) ) assert( "Invalide AssetId" == std::string( ) );
     if( !lua_isstring( luaState, 2 ) ) assert( "You passed invalid fileName" == std::string( ) );
-    std::string id = lua_tostring( luaState, 1 );
-    textures.insert( std::pair<std::string, sf::Texture*>( id, new sf::Texture( ) ) );
-    textures.at( id )->loadFromFile( lua_tostring( luaState, 2 ) );
     // return id
-    lua_pushstring( luaState, id.c_str( ) );
+    lua_pushstring( luaState, Textures::loadFromFile( lua_tostring( luaState, 1 ), lua_tostring( luaState, 2 ) ).c_str( ) );
     return 1;
 }
 /// \brief luaRemoveTexture

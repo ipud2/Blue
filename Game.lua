@@ -1,42 +1,47 @@
 # usr/bin/lua
-register_events();
+register_system();
+register_input( )
+register_event();
+register_collision( );
+register_graphics( );
+register_glyph( );
 
-local Clone = require( "Clone" );
-local Keyboard = require( "Keyboard" );
-local Mouse = require( "Mouse" );
-local Texture = require( "Texture" ); 
-
-math.randomseed( os.time( ) );
--- the main game table that holds everything
+-- global table that holds all game resources and data.. to much power?
 Game = {};
-
--- A list of all resources being used by the game
-Resources = {};
-ObjMan = require( "ObjMan" );
+Keyboard = require( "Keyboard" );
+local Mouse = require( "Mouse" );
+local State = require( "State" );
+local Clone = require( "Clone" );
+local FSM = require( "FSM" );
+local pauseState = Clone( require( "PauseState" ) );
+local menuState = Clone( require( "MenuState" ) );
+local runState = Clone( require( "RunState" ) );
+local globalState = Clone( require( "GlobalState" ) );
 
 -- required engine functions
 function init( )
-	-- load resources
-
-	-- Create initial objects
+	Game.fsm = Clone( FSM );
+	Game.fsm:create( Game, menuState, globalState );
 	print( "Init has ran!" );
 end
 function handleEvents( )
 	local event = get_event();
 	while event ~= false do
 		-- handle event here
-		if event.receiverID == "GAME" then 
+		if event.receiverID == "LUA" then 
 
-		else ObjMan:handleEvent( event );
+		else 
+			Game.fsm:handleEvent( event );
 		end											
-		-- if event.receiverID == "LUA" then
 		event = get_event();
 	end
 end
 function update( dt )
-	if Keyboard:isKeyPressed( "R" ) then init( ); end
-	-- if Mouse:isButtonClicked( Mouse["Right"] ) then print( "Right Button Clicked!!!!!" ); end
+	if Keyboard:isKeyPressed( "R" ) then 
+		Game.fsm.currentState:onExit( ); 
+		init( ); 
+	end
+	Game.fsm:update( );
+	-- if Mouse:isButtonClicked( Mouse["Right"] ) then print( "Right Button Clicked!!!!!" ); end	
 	
-	ObjMan:update( );
 end
-

@@ -24,7 +24,7 @@ namespace CollisionMan {
     /// static member that gets built each frame by lua so that all its nodes can
     /// be checked for collision at the end of the check this dataStructure is wiped for the next
     /// frame where lua will do it again.
-    static std::vector<Obj> objRects = std::vector<CollisionMan::Obj>();
+    static std::map<std::string, std::vector<Obj>> objRects = std::map<std::string, std::vector<CollisionMan::Obj>>();
     /// \brief The node struct
     /// the node represents a quadrant in the quad tree
     struct Node {
@@ -96,13 +96,15 @@ namespace CollisionMan {
     /// This is for debug only and will be removed
     ///  \param mWindow
     void draw( sf::Window* mWindow );
+
     //## Lua interface to CollisionMan
+    static int luaCreateCollisionGrid( lua_State* luaState );
     static int luaAddObj( lua_State* luaState );
     /// \brief update
     /// Updates the current list of rectangles to be used in algorithm, then runs
     /// the collisoin algorithm afterwards sending event messages telling of any
     /// events that occured.
-    static void update( lua_State *luaState );
+    static void update(void );
     static int luaRegister( lua_State* luaState );
 }
 #include "CollisionMan.inl"

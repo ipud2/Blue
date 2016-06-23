@@ -4,7 +4,7 @@ register_graphics( );
 register_convexShape( );
 
 local Circle = {};
-function Circle:create( id, x, y, radius, color )
+function Circle:create( id, layerId, x, y, radius, color )
 	self.id = id or "UNDEFINED ASSET ID";
 	self.x = x or 0;
 	self.y = y or 0;
@@ -16,7 +16,7 @@ function Circle:create( id, x, y, radius, color )
 	self.outlineThickness = 0;
 	self.origin = { x = 0, y = 0 };
 	self.segments = 30;
-	create_shape( self.id, self.x, self.y, self.segments, self.color.r, self.color.g, self.color.b, self.color.a );
+	create_shape( self.id, layerId, self.x, self.y, self.segments, self.color.r, self.color.g, self.color.b, self.color.a );
 	shape_setOrigin( self.id, self.x, self.y );
 	self:defineCircle( );
 end

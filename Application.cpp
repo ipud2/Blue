@@ -2,9 +2,8 @@
 
 //## Constructors
 Application::Application( void )
-        : mWindow( new sf::RenderWindow( ) ),
-          mLuaState( luaL_newstate( ) ) { }
-Application::~Application( void ) { delete mWindow; }
+        : mLuaState( luaL_newstate( ) ) { }
+Application::~Application( void ) { delete Window; }
 
 //## Interface
 void Application::run( void ) {
@@ -13,7 +12,7 @@ void Application::run( void ) {
     // this is the main game loop!!
     sf::Clock clock;
     sf::Time timeSinceLastUpdate = sf::Time::Zero;
-    while( mWindow->isOpen( ) ) {
+    while( Window->isOpen( ) ) {
         timeSinceLastUpdate += clock.restart();
         while( timeSinceLastUpdate > TimePerFrame ) {
             timeSinceLastUpdate -= TimePerFrame;
@@ -23,12 +22,13 @@ void Application::run( void ) {
         draw( );
     }
 }
+
 void Application::init( void ) {
     runConfig( ); // run config.lua for defualt window values
     setUpBlueEnvironment( ); // set up engine methods for lua
 
     // read file or crash program
-    if( luaL_dofile( mLuaState, "Game.lua" )   ) assert( "Can't find Game.lua!\n" == std::string( ) );
+
     if( luaL_dofile( mLuaState, "Game.lua" )   ) assert( "Can't find Game.lua!\n" == std::string( ) );
 
     // call Game.lua init for any user game specific setup
@@ -47,17 +47,16 @@ void Application::update( sf::Time dt ) {
     lua_pushnumber( mLuaState, dt.asMilliseconds( ) );
     // call Game.lua update method
     lua_pcall( mLuaState, 1, 0, 0 ); // 0's == args, return vals, error checking C style
+
     // CollisionMan needs to be updated here
-    CollisionMan::update( mLuaState );
-    if( sf::Keyboard::isKeyPressed( sf::Keyboard::Escape ) )
-        mWindow->close( );
+    CollisionMan::update( );
 }
 void Application::handleEvents( void ) {
     SystemMan::Events::update( );
     sf::Event event;
-    while( mWindow->pollEvent( event ) ) {
+    while( Window->pollEvent( event ) ) {
         if( event.type == sf::Event::Closed )
-            mWindow->close( );
+            Window->close( );
         else
             SystemMan::Events::addEvent( event );
     }
@@ -71,11 +70,19 @@ void Application::handleEvents( void ) {
 }
 void Application::draw( void ) {
     // get list of drawables from GraphicsMan and draw them.
-    mWindow->clear( mBackgroundColor );
-    for( auto asset : GraphicsMan::ConvexShape::convexShapes ) { mWindow->draw( *asset.second ); }
-    for( auto asset : GraphicsMan::GlyphMan::glyphs ) { mWindow->draw( *asset.second ); }
-    CollisionMan::QUAD_TREE.root->draw( mWindow );
-    mWindow->display( );
+    Window->clear( mBackgroundColor );
+
+    // set up all the views to be rendered
+    for( auto camera : CameraMan::cameras ) {
+        Window->setView( camera.second );
+        // iterate through all the layers drawing all drawable assets in the structure
+        for( auto layer : GraphicsMan::Layers::layers ) {
+            for( auto asset : layer.mGraphics ) {
+                Window->draw( *asset.second );
+            }
+        }
+    }
+    Window->display( );
 }
 //## Behaviors
 void Application::runConfig( void ) {
@@ -133,7 +140,7 @@ void Application::runConfig( void ) {
     mLuaState = nullptr;
 
     // use values to setup game
-    mWindow->create( sf::VideoMode( screenWidth, screenHeight ), "Project Blue" );
+    Window->create( sf::VideoMode( screenWidth, screenHeight ), "Project Blue" );
     mBackgroundColor = sf::Color( red, green, blue );
     // open new state
     mLuaState = luaL_newstate( );
@@ -149,6 +156,9 @@ void Application::setUpBlueEnvironment( void ) {
     lua_pushcfunction( mLuaState, luaSetBackgroundColor );
     lua_setglobal( mLuaState, "app_setBackgroundColor" );
 
+    lua_pushcfunction( mLuaState, luaCloseWindow );
+    lua_setglobal( mLuaState, "app_closeWindow" );
+
     // register all engine components to lua
     lua_pushcfunction( mLuaState, SystemMan::luaRegister );
     lua_setglobal( mLuaState, "register_system" );
@@ -159,13 +169,17 @@ void Application::setUpBlueEnvironment( void ) {
     lua_setglobal( mLuaState, "register_events" );
     lua_pushcfunction( mLuaState, CollisionMan::luaRegister );
     lua_setglobal( mLuaState, "register_collision" );
-    lua_pushcfunction( mLuaState, ObjectMan::luaRegister );
-    lua_setglobal( mLuaState, "register_object" );
+    lua_pushcfunction( mLuaState, CameraMan::luaRegister );
+    lua_setglobal( mLuaState, "register_camera" );
+
+    lua_pushcfunction( mLuaState, Ai::Movement::luaRegister );
+    lua_setglobal( mLuaState, "register_ai" );
+
 
     // register global variables to lua for ease of use
-    lua_pushnumber( mLuaState, this->mWindow->getSize().x );
+    lua_pushnumber( mLuaState, Window->getSize().x );
     lua_setglobal( mLuaState, "_SCREEN_WIDTH" );
-    lua_pushnumber( mLuaState, this->mWindow->getSize().y );
+    lua_pushnumber( mLuaState, Window->getSize().y );
     lua_setglobal( mLuaState, "_SCREEN_HEIGHT" );
 }
 
@@ -186,3 +200,7 @@ int Application::luaSetBackgroundColor( lua_State* luaState ) {
     return 0;
 }
 
+int Application::luaCloseWindow( lua_State* )
+{
+    Window->close( );
+}

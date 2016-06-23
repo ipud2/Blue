@@ -179,17 +179,29 @@ int SystemMan::Input::luaIsMouseClicked( lua_State* luaState ) {
     lua_pushboolean( luaState, sf::Mouse::isButtonPressed( (sf::Mouse::Button)lua_tointeger( luaState, -1 ) ) );
     return 1;
 }
+int SystemMan::Input::luaGetMousePosition( lua_State* luaState )
+{
+    // i need to add the renderWindow as arg to gtPos function to gt relative coords
+    lua_pushnumber( luaState, sf::Mouse::getPosition( (*Window) ).x );
+    lua_pushnumber( luaState, sf::Mouse::getPosition( (*Window) ).y );
+    return 2;
+}
+
 int SystemMan::Input::luaRegister( lua_State* luaState ) {
     static bool alreadyRegistered = false;
     if( !alreadyRegistered ) {
         lua_pushcfunction( luaState, SystemMan::Input::luaIsKeyPressed );
-        lua_setglobal( luaState, "keyboard_iskeyPressed" );
+        lua_setglobal( luaState, "keyboard_isKeyPressed" );
         lua_pushcfunction( luaState, SystemMan::Input::luaIsMouseClicked );
         lua_setglobal( luaState, "mouse_isButtonClicked" );
+
+        lua_pushcfunction( luaState, SystemMan::Input::luaGetMousePosition );
+        lua_setglobal( luaState, "mouse_getPos" );
         alreadyRegistered = true;
     }
     return 0; // returns SYSTEM_EVENTS table
 }
+
 int SystemMan::luaRegister( lua_State* luaState ) {
     static bool alreadyRegistered = false;
     if( !alreadyRegistered ) {

@@ -269,6 +269,7 @@ int GraphicsMan::ConvexShape::luaSetTextureRect( lua_State* luaState ) {
     if( !lua_isnumber( luaState, 3 ) ) assert( "Invalid Y value" == std::string( ) );
     if( !lua_isnumber( luaState, 4 ) ) assert( "Invalid Width value" == std::string( ) );
     if( !lua_isnumber( luaState, 5 ) ) assert( "Invalid Height value" == std::string( ) );
+
     convexShapes.at( id )->setTextureRect( sf::Rect<int>( (int)lua_tonumber( luaState, 2 ),
                                            (int)lua_tonumber( luaState, 3 ),
                                            (int)lua_tonumber( luaState, 4 ),
@@ -363,47 +364,67 @@ int GraphicsMan::ConvexShape::luaSetPointCount( lua_State* luaState ) {
 /// \brief GraphicsMan::ConvexShape::luaCreateConvexShape
 /// \param luaState
 /// STACK
-/// 8 A             -1
-/// 7 B             -2
-/// 6 G             -3
-/// 5 R             -4
-/// 4 pointCount    -5
-/// 3 Y             -6
-/// 2 X             -7
-/// 1 ID            -8
+/// 9 A             -1
+/// 8 B             -2
+/// 7 G             -3
+/// 6 R             -4
+/// 5 pointCount    -5
+/// 4 Y             -6
+/// 3 X             -7
+/// 2 layerId       -8
+/// 1 ID            -9
 ///  \return
 /// the ID passed by the user
 int GraphicsMan::ConvexShape::luaCreateConvexShape( lua_State* luaState ) {
     if( !lua_isstring( luaState, 1 ) ) assert( "Invalid id" == std::string( ) );
-    if( !lua_isnumber( luaState, 2 ) ) assert( "Invalid X value" == std::string( ) );
-    if( !lua_isnumber( luaState, 3 ) ) assert( "Invalid Y value" == std::string( ) );
-    if( !lua_isnumber( luaState, 4 ) ) assert( "Invalid PointCount value" == std::string( ) );
-    if( !lua_isnumber( luaState, 5 ) ) assert( "Invalid red value" == std::string( ) );
-    if( !lua_isnumber( luaState, 6 ) ) assert( "Invalid green value" == std::string( ) );
-    if( !lua_isnumber( luaState, 7 ) ) assert( "Invalid blue value" == std::string( ) );
-    if( !lua_isnumber( luaState, 8 ) ) assert( "Invalid alpha value" == std::string( ) );
+    if( !lua_isnumber( luaState, 2 ) ) assert( "Invalid layerId" == std::string( ) );
+    if( !lua_isnumber( luaState, 3 ) ) assert( "Invalid X value" == std::string( ) );
+    if( !lua_isnumber( luaState, 4 ) ) assert( "Invalid Y value" == std::string( ) );
+    if( !lua_isnumber( luaState, 5 ) ) assert( "Invalid PointCount value" == std::string( ) );
+    if( !lua_isnumber( luaState, 6 ) ) assert( "Invalid red value" == std::string( ) );
+    if( !lua_isnumber( luaState, 7 ) ) assert( "Invalid green value" == std::string( ) );
+    if( !lua_isnumber( luaState, 8 ) ) assert( "Invalid blue value" == std::string( ) );
+    if( !lua_isnumber( luaState, 9 ) ) assert( "Invalid alpha value" == std::string( ) );
 
-    // create Id
-    std::string id = lua_tostring( luaState, 1 );
-    convexShapes.insert( std::pair<std::string, sf::ConvexShape*>( id, new sf::ConvexShape( (float)lua_tonumber( luaState, 4 ) ) ) );
-
-    convexShapes.at( id )->setPosition( sf::Vector2f( (float)lua_tonumber( luaState, 2 ), (float)lua_tonumber( luaState, 3 ) ) );
-    convexShapes.at( id )->setFillColor( sf::Color( (float)lua_tonumber( luaState, 5 ), (float)lua_tonumber( luaState, 6 ), (float)lua_tonumber( luaState, 7 ), (float)lua_tonumber( luaState, 8 )  ) );
-
-    // std::cout << "new Assets Id: " << id << std::endl;
-    // return id
-    lua_pushstring( luaState, id.c_str( ) );
-    return 1;
+    lua_pushstring( luaState, createConvexShape( lua_tostring( luaState, 1 ),
+                lua_tonumber( luaState, 2 ), (float)lua_tonumber( luaState, 3 ),
+                lua_tonumber( luaState, 4 ), lua_tonumber( luaState, 5 ), sf::Color(
+                (float)lua_tonumber( luaState, 6 ), (float)lua_tonumber( luaState, 7 ),
+                (float)lua_tonumber( luaState, 8 ), (float)lua_tonumber( luaState, 9 ) ) ).c_str( ) );
+    return 1; // return the id of the newly added object
 }
+
+std::string GraphicsMan::ConvexShape::createConvexShape( std::string id, unsigned int layer, float x, float y, int pointCountValue, sf::Color color )
+{
+    // create the new shape
+    convexShapes.insert( std::pair<std::string, sf::ConvexShape*>( id, new sf::ConvexShape( pointCountValue ) ) );
+    convexShapes.at( id )->setPosition( sf::Vector2f( x, y ) );
+    convexShapes.at( id )->setFillColor( color );
+
+    // add the shape to layers so it can be drawn to screen
+    Layers::layers.at( layer ).mGraphics.insert(std::pair<std::string, sf::Drawable*>( id, convexShapes.at( id ) ) );
+
+    //else assert( "Invalid for object to be added to!!" == std::string( ) );
+    return id;
+}
+
 /// \brief luaRemoveConvexShape
 /// Given the if of an ahape that exists this method removes it.
 /// \param luaState
 /// STACK
-/// 1 ID -1
+/// 2 LayerId -2
+/// 1 ID      -1
 int GraphicsMan::ConvexShape::luaRemoveConvexShape( lua_State* luaState )
 {
     if( !lua_isstring( luaState, 1 ) ) assert( "Invalid id" == std::string( ) );
-    if( convexShapes.find( lua_tostring( luaState, 1 ) ) != convexShapes.end( ) ) convexShapes.erase( lua_tostring( luaState, 1 ) );
+    if( !lua_isnumber( luaState, 2 ) ) assert( "Invalid layerId" == std::string( ) );
+    if( Layers::layers.size()  > (unsigned int)lua_tonumber( luaState, 2 ) ) {
+        if( convexShapes.find( lua_tostring( luaState, 1 ) ) != convexShapes.end( ) )
+        {
+            Layers::layers.at( lua_tonumber( luaState, 2 ) ).mGraphics.erase( lua_tostring( luaState, 1 ) );
+            convexShapes.erase( lua_tostring( luaState, 1 ) );
+        }
+    } else std::cout << "You passed an invalid layer id to remove shape: " << lua_tostring( luaState, 1 ) << std::endl;
     return 0;
 }
 /// \brief luaRegister

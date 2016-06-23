@@ -4,7 +4,7 @@ register_graphics( );
 register_convexShape( );
 
 local Rectangle = { };
-function Rectangle:create( id, x, y, w, h )
+function Rectangle:create( id, layerId, x, y, w, h )
 	self.id = id or "UNDEFINED ASSET ID";
 	self.x = x or 0;
 	self.y = y or 0;
@@ -16,8 +16,9 @@ function Rectangle:create( id, x, y, w, h )
 	self.outlineColor = { r = 255, g = 0, b = 255, a = 0 };
 	self.outlineThickness = 0;
 	self.origin = { x = 0, y = 0 };
-	create_shape( self.id, self.x, self.y, 4, self.color.r, self.color.g, self.color.b, self.color.a );
-	shape_setOrigin( self.id, self.x + self.width/2, self.y + self.height/2 );
+	self.layerId = layerId or 0;
+	create_shape( self.id, layerId, self.x, self.y, 4, self.color.r, self.color.g, self.color.b, self.color.a );
+	shape_setOrigin( self.id, self.x, self.y );
 	-- always set points in clockwise rotation!
 	-- 2nd arg is index to array of points(X,Y values) that make up this shape in C++
 	shape_setPoint( self.id, 0, self.x, self.y );
@@ -26,7 +27,7 @@ function Rectangle:create( id, x, y, w, h )
 	shape_setPoint( self.id, 3, self.x, self.y + self.height );
 end
 function Rectangle:destroy( )
-	remove_shape( self.id )
+	remove_shape( self.id, self.layerId );
 end
 
 function Rectangle:setSize( width, height )

@@ -9,19 +9,17 @@ user whenever they forget to implement a method in there object file
 that is implemented in this file becuase all of these methods are needed
 to make a fully functioning object.
 --]]
-register_object();
+
 local Object = {};
 
-Object.id = "NO_ID";
-
-function Object:create( id )
-	self.id = id or "NO_ID";
-	create_obj( self.id );
+function Object:create( id, layerId )
+	self.id = id or "NO_ID"; self.layerId = layerId or "UNDEFINED";
+	Game.objMan:addObj( self );
 	print( "if you are reading this then " .. self.id .. " does not a have a create method defined!" );
 end
 
 function Object:destroy()
-	remove_obj( self.id );
+	Game.objMan:removeObj( self.id );
 	print( "if you are reading this then " .. self.id .. " does not a have a destroy method defined!" );
 end
 

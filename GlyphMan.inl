@@ -131,6 +131,23 @@ int GraphicsMan::GlyphMan::luaLoadFromFile( lua_State* luaState ) {
     lua_pushstring( luaState, id.c_str( ) );
     return 1;
 }
+
+///
+/// \brief GraphicsMan::GlyphMan::luaRemoveFont
+/// \param luaState
+/// LUA STACK
+/// -1 id 1
+int GraphicsMan::GlyphMan::luaRemoveFont( lua_State* luaState )
+{
+    if( lua_isstring( luaState, 1 ) ) {
+        if( fonts.find( lua_tostring( luaState, 1 ) ) != fonts.end( ) ) {
+            fonts.erase( lua_tostring( luaState, 1 ) );
+        }
+    } else std::cout << "You passed invalid id to remove font" << std::endl;
+    return 0;
+}
+
+
 // Text interface
 
 /// \brief luaSetCharSize
@@ -251,23 +268,37 @@ int GraphicsMan::GlyphMan::luaGetLocalBounds( lua_State* luaState ) {
 }
 /// \brief luaCreateGlyph
 /// STACK
-/// 5 y      -1
-/// 4 x      -2
-/// 3 string -3
-/// 2 fontID -4
-/// 1 ID     -5
+/// 6 y       -1
+/// 5 x       -2
+/// 4 string  -3
+/// 3 fontID  -4
+/// 2 layerId -5
+/// 1 ID      -6
 ///  \param luaState
 int GraphicsMan::GlyphMan::luaCreateGlyph( lua_State* luaState ) {
     // Validate stack
     if( !lua_isstring( luaState, 1 ) ) assert( "Invalid AssetId" == std::string( ) );
-    if( !lua_isstring( luaState, 2 ) ) assert( "Invalid FontID" == std::string( ) );
-    if( !lua_isstring( luaState, 3 ) ) assert( "Invalid new string" == std::string( ) );
-    if( !lua_isnumber( luaState, 4 ) ) assert( "Invalid x Param" );
-    if( !lua_isnumber( luaState, 5 ) ) assert( "Invalid y Param" );
+    if( !lua_isnumber( luaState, 2 ) ) assert( "Invalid LayerId" == std::string( ) );
+    if( !lua_isstring( luaState, 3 ) ) assert( "Invalid FontID" == std::string( ) );
+    if( !lua_isstring( luaState, 4 ) ) assert( "Invalid new string" == std::string( ) );
+    if( !lua_isnumber( luaState, 5 ) ) assert( "Invalid x Param" );
+    if( !lua_isnumber( luaState, 6 ) ) assert( "Invalid y Param" );
+    std::string id = lua_tostring( luaState, 1 );
+
     glyphs.insert( std::pair<std::string, sf::Text*>(
-                       lua_tostring( luaState, 1 ), new sf::Text( lua_tostring( luaState, 3 ), *fonts.at( lua_tostring( luaState, 2 ) ) ) ) );
-    glyphs.at( lua_tostring( luaState, 1 ) )->setPosition( (float)lua_tonumber( luaState, 4 ), (float)lua_tonumber( luaState, 5 ) );
-    lua_pushstring( luaState, lua_tostring( luaState, 1 ) );
+                         id, new sf::Text( lua_tostring( luaState, 4 ), *fonts.at( lua_tostring( luaState, 3 ) ) ) ) );
+
+    glyphs.at( id )->setPosition( (float)lua_tonumber( luaState, 5 ), (float)lua_tonumber( luaState, 6 ) );
+
+    // add glyph to layers for drawing
+    // add the shape to layers so it can be drawn to screen
+    unsigned int layerId = (unsigned int)lua_tonumber( luaState, 2 );
+
+    Layers::layers.at( layerId ).mGraphics.insert(std::pair<std::string, sf::Drawable*>( id, glyphs.at( id ) ) );
+
+
+    // return id to lua
+    lua_pushstring( luaState, id.c_str( ) );
     return 1;
 }
 /// \brief luaRemoveGlyph
@@ -277,7 +308,13 @@ int GraphicsMan::GlyphMan::luaCreateGlyph( lua_State* luaState ) {
 int GraphicsMan::GlyphMan::luaRemoveGlyph( lua_State* luaState )
 {
     if( !lua_isstring( luaState, 1 ) ) assert( "Invalid id" == std::string( ) );
-    if( glyphs.find( lua_tostring( luaState, 1 ) ) != glyphs.end( ) ) glyphs.erase( lua_tostring( luaState, 1 ) );
+    if( !lua_isnumber( luaState, 2 ) ) assert( "Invalid layerId" == std::string( ) );
+    if( Layers::layers.size() > (unsigned int)lua_tonumber( luaState, 2 ) ) {
+        if( glyphs.find( lua_tostring( luaState, 1 ) ) != glyphs.end( ) ) {
+            Layers::layers.at(  lua_tonumber( luaState, 2 ) ).mGraphics.erase( lua_tostring( luaState, 1 ) );
+            glyphs.erase( lua_tostring( luaState, 1 ) );
+        }
+    } else std::cout << "You passed an invalid layer id to remove " << lua_tostring( luaState, 1 ) << std::endl;
     return 0;
 }
 int GraphicsMan::GlyphMan::luaRegister( lua_State* luaState ) {
@@ -299,6 +336,8 @@ int GraphicsMan::GlyphMan::luaRegister( lua_State* luaState ) {
         // font interface
         lua_pushcfunction( luaState, luaLoadFromFile );
         lua_setglobal( luaState, "font_loadFromFile" );
+        lua_pushcfunction( luaState, luaRemoveFont );
+        lua_setglobal( luaState, "remove_font" );
         // sf::Text interface
         lua_pushcfunction( luaState, luaSetCharSize );
         lua_setglobal( luaState, "glyph_setCharSize" );

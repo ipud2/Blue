@@ -14,10 +14,14 @@ extern "C" {
 }
 #include "GraphicsMan.h"
 #include "SystemMan.h"
-#include "ObjectMan.h"
 #include "CollisionMan.h"
+#include "Window.h"
+#include "CameraMan.h"
+#include "Ai.h"
+
 static const sf::Time TimePerFrame = sf::seconds( 1.f / 60.f );
 static sf::Color mBackgroundColor;
+
 
 class Application {
 public:
@@ -47,7 +51,6 @@ public:
     void setBackgroundColor( sf::Color bgColor ) { mBackgroundColor = bgColor; }
 private:
     //## Attributes
-    sf::RenderWindow* mWindow;
     lua_State* mLuaState;
     //## Behaviors
     // calls and run gets values from config.lua
@@ -57,5 +60,6 @@ private:
     //## Lua Interface methods
     static int luaGetBackgroundColor( lua_State* luaState );
     static int luaSetBackgroundColor( lua_State* luaState );
+    static int luaCloseWindow( lua_State* luaState );
 };
 #endif // APPLICATION_H

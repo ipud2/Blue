@@ -145,6 +145,9 @@ namespace ConvexShape {
     ///  \return
     /// the ID passed by the user
     static int luaCreateConvexShape( lua_State* luaState );
+    /// the C++ version of the above method
+    static std::string createConvexShape( std::string id, unsigned int layer, float x, float y, int pointCountValue, sf::Color color  = sf::Color::White );
+
     /// \brief luaRemoveConvexShape
     /// Given the if of an ahape that exists this method removes it.
     /// \param luaState
@@ -160,6 +163,20 @@ namespace ConvexShape {
 namespace Textures {
     // assetID, asset
     static std::map<std::string, sf::Texture*> textures;
+
+    ///
+    /// \brief loadFromFile
+    /// c++ friendly method for loading images into memory lua function below
+    /// simply wraps this method
+    ///  \param assetId
+    ///     Id of the new asset being loaded ( can be anythiny as long as it's unique )
+    /// \param fileName
+    ///         the handle for the file the asset is saved at
+    /// \return
+    /// returns the id of the newly created assset this is mostly for lua
+    ///
+    static std::string loadFromFile( std::string assetId, std::string fileName );
+
     /// \brief luaLoadFromFile
     /// \param luaState
     /// STACK
@@ -242,6 +259,14 @@ namespace GlyphMan {
     /// \return 
     /// the id of new font
     static int luaLoadFromFile( lua_State* luaState );
+
+    ///
+    /// \brief GraphicsMan::GlyphMan::luaRemoveFont
+    /// \param luaState
+    /// LUA STACK
+    /// -1 id 1
+    static  int luaRemoveFont( lua_State* luaState );
+
     // Text interface
 
     /// \brief luaSetCharSize
@@ -310,6 +335,56 @@ namespace GlyphMan {
     static int luaCreateGlyph( lua_State* luaState );
     static int luaRegister( lua_State* luaState );
 }
+
+///
+/// The layers namespace is meant to define the layering systen that allows users
+/// to choose in what order the graphics are drawn to the screen.
+///
+/// the only added complexity for the user is that they will have to define
+/// their own layers, and then define what layers their graphics belong to
+/// when they create them.
+///
+namespace Layers {
+///
+/// \brief The Layer class
+/// This is the class definition of the layer data type
+    struct Layer {
+        //## Attributes
+        unsigned int mId;
+        std::map<std::string, sf::Drawable*> mGraphics;
+    };
+
+
+    // The layers data structure defined in order so that the graphics will be drawn appropriatly to screen
+    static std::vector<Layer> layers;
+
+    static int addLayer( void )
+    {
+        Layer layer = Layer();
+        layer.mId = layers.size();
+        layers.push_back( layer );
+        return layers.size() - 1;
+    }
+
+    static int luaAddLayer( lua_State* luaState )
+    {
+        // return the id of the new layer
+        lua_pushnumber( luaState, addLayer( ) );
+        return 1;
+    }
+    // LUA STACK
+    static int luaRemoveLayer( lua_State* luaState )
+    {
+        if( layers.size() > 0 ) {
+            std::cout << "Layers Size: " << layers.size( ) << " A layer has been removed" << std::endl;
+            layers.pop_back( );
+        }
+        return 0;
+    }
+
+}
+
+
 // GraphicsMan register Method
 static int luaRegisterGraphicsMan( lua_State* luaState ) {
     // add graphics components to lua
@@ -321,6 +396,11 @@ static int luaRegisterGraphicsMan( lua_State* luaState ) {
         lua_setglobal( luaState, "register_texture" );
         lua_pushcfunction( luaState, GlyphMan::luaRegister );    // Glyphs
         lua_setglobal( luaState, "register_glyph" );
+        lua_pushcfunction( luaState, Layers::luaAddLayer );      // Layers
+        lua_setglobal( luaState, "addLayer" );
+        lua_pushcfunction( luaState, Layers::luaRemoveLayer );      // Layers
+        lua_setglobal( luaState, "remove_layer" );
+
         alreadyRegistered = true;
     }
     return 0;

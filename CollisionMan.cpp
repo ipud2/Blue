@@ -87,7 +87,7 @@ void CollisionMan::Node::getPairs( std::vector<std::pair<Obj, Obj>>& pairs ) {
             Node* temp = parent;
             std::vector<Obj> objs;
             while( temp != nullptr ) {
-                for( auto i : temp->localObjs ) objs.push_back( i );
+                for( auto i : temp->localObjs ) { objs.push_back( i ); }
                 temp = temp->parent;
             }
             if( objs.size() > 0 )
@@ -145,8 +145,8 @@ std::vector<std::pair<std::string, std::string>> CollisionMan::QuadTree::update(
     while( size > 0 )
     {
         // if there are objs in the list then they need to be added to tree
-        if ( !root->addObj( objRects[size - 1] ) )
-            ; // std::cout << "ERROR OBJ FAILED TO BE ADDED TO QUADTREE " << objRects.at( size - 1 ).id << " " << objRects.at( size - 1 ).rect.left << std::endl;
+       // if ( !root->addObj( objRects[size - 1] ) )
+            //;  std::cout << "ERROR OBJ FAILED TO BE ADDED TO QUADTREE " << objRects.at( size - 1 ).id << " " << objRects.at( size - 1 ).rect.left << std::endl;
         objRects.pop_back( );
         size = objRects.size( );
     }
@@ -169,7 +169,7 @@ std::vector<std::pair<std::string, std::string>> CollisionMan::QuadTree::update(
             }
         }
         if( !isDuplicate && query.first.rect.intersects( query.second.rect ) ) {
-            // std::cout << "Colliding Pairs: " << query.first.id << ", " << query.second.id << std::endl;
+            //std::cout << "Colliding Pairs: " << query.first.id << ", " << query.second.id << std::endl;
             finalPairs.push_back( std::pair<std::string, std::string>( query.first.id, query.second.id ) );
         }
     }

@@ -3,8 +3,9 @@
 register_glyph( );
 
 local Glyph = {};
-function Glyph:create( id, fontId, fontSize, text, x, y )
-	self.id = id or "Undefined Glyph";
+function Glyph:create( id, layerId, fontId, fontSize, text, x, y )
+	self.id = id or print( "invalid id sent to Glyh:create()" );
+	self.layerId = layerId or print( "Invalid layer id passed to: " .. self.id ); 
 	self.fontStyles = { };
 	self.fontStyles["regular"] = 0;
 	self.fontStyles["bold"] = 1;
@@ -16,7 +17,10 @@ function Glyph:create( id, fontId, fontSize, text, x, y )
 	self.style = self.fontStyles["regular"];
 	self.x = x or 0;
 	self.y = y or 0;
-	create_glyph( self.id, self.font, text, self.x, self.y );
+	create_glyph( self.id, self.layerId, self.font, text, self.x, self.y );
+end
+function Glyph:destroy()
+	remove_glyph( self.id, self.layerId );
 end
 function Glyph:setPos( x, y )
 	self.x = x or 0;

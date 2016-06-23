@@ -5,11 +5,9 @@ function Animation:create( frameWidth, frameHeight, startX, startY, numFrames, f
 	self.numFrames = numFrames or 0;
 	self.frameTime = frameTime or 0;
 	local X = startX or 0; local Y = startY or 0;
-	print( "CreateAnimation StartPos: " .. X .. ", " .. Y );
 	local index = 1;	
 	self.frames = {};
-	print( "Made It!" );
-	while X < frameWidth * numFrames do
+	while X < frameWidth * numFrames + startX do
 		self.frames[index] = {};
 		self.frames[index].x = X;
 		self.frames[index].y = Y;
